@@ -28,6 +28,7 @@ class MarcaSchema(ma.SQLAlchemySchema):
         
     id = ma.auto_field()
     nombre = ma.auto_field()
+    activo = ma.auto_field()
 
 class ModeloSchema(ma.SQLAlchemySchema):
     class Meta:
@@ -36,7 +37,3 @@ class ModeloSchema(ma.SQLAlchemySchema):
     id = ma.auto_field()
     nombre = ma.auto_field()
     id_marca = ma.auto_field(required=True)
-
-
-
-
