@@ -17,15 +17,10 @@ def modelo():
     additional_data = get_jwt()
     visor = additional_data.get('visor')
     admin = additional_data.get('administrador')
-    print("0")
+  
     if request.method == 'POST':
-        print("1")
-        if admin:
-            print("2")
-            errors = ModeloSchema().validate(data)
-            if errors:
-                return make_response(jsonify(errors), 400)
-            
+        
+        if admin:            
             nuevo_modelo = Modelo(
                 nombre=data.get('nombre'),
                 id_marca=id_marca

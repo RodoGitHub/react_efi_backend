@@ -12,6 +12,9 @@ class UserSchema(ma.SQLAlchemySchema):
     username = ma.auto_field()
     password_hash = ma.auto_field()
     is_admin = ma.auto_field()
+    is_viewer = ma.auto_field()
+    is_editor = ma.auto_field()
+    activo = ma.auto_field()
 
 class UserMinimalSchema(ma.SQLAlchemySchema):
     class Meta:

@@ -69,16 +69,16 @@ def login():
 def users():
     additional_data = get_jwt()
     administrador = additional_data.get('administrador')
-    print(administrador)
-
+    editor = additional_data.get('editor')
+    visor = additional_data.get('visor')
+    
     if request.method == 'POST':
-        if administrador is True:
-            print("entre")
+        if administrador:
             data = request.get_json()
             username = data.get('usuario')
             password = data.get('contrasenia')
             tipo_usuario = data.get('tipo')
-            print(tipo_usuario)
+           
 
             try:
                 if tipo_usuario == "admin":
@@ -89,7 +89,6 @@ def users():
                     is_admin = False
                     is_viewer = True
                     is_editor = False
-                    print("entre visor")
                 elif tipo_usuario == "editor":
                     is_admin = False
                     is_viewer = False
@@ -105,7 +104,7 @@ def users():
                 
                 db.session.add(nuevo_usuario)
                 db.session.commit()
-                print("llegue nuevo")
+               
                 return jsonify(
                     {
                     "Mensaje":"Usuario creado correctamente",
@@ -118,10 +117,74 @@ def users():
                     }
                 )
         else:
-            return jsonify(Mensaje= "Solo el admin puede crear nuevos usuarios")
+            return jsonify({"Mensaje": "Solo el admin puede crear nuevos usuarios"}), 401
     
     usuarios = User.query.all()
-    if administrador is True:
+    if administrador or editor or visor:
         return UserSchema().dump(obj=usuarios, many=True)
     else:
         return UserMinimalSchema().dump(obj=usuarios, many=True)
+
+@auth_bp.route('/user/deactivate', methods=['POST'])
+@jwt_required()
+def deactivate_user():
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    usuario = User.query.get_or_404(user_id)
+    
+    if usuario.activo:
+        additional_data = get_jwt()
+        administrador = additional_data.get('administrador')
+        editor = additional_data.get('editor')
+
+        if administrador or editor:
+            usuario.activo = False
+            db.session.commit()
+            return jsonify({"Mensaje": "Usuario borrado correctamente", "Usuario": usuario.username})
+        else:
+            return jsonify({"Mensaje": "No tienes permisos para borrar usuarios"}), 401
+    else:
+        return jsonify({"Mensaje": "Este usuario ya estaba borrado", "Usuario": usuario.username}), 401
+    
+@auth_bp.route('/user/editar', methods=['POST'])
+@jwt_required()
+def editar_user():
+    additional_data = get_jwt()
+    administrador = additional_data.get('administrador')
+    editor = additional_data.get('editor')
+    
+
+    data = request.get_json()
+    user_id = data.get('user_id')
+    username = data.get('username')
+    userType = data.get('userType')
+    password = data.get('password')
+
+    usuario = User.query.get_or_404(user_id)
+    
+    if usuario.activo:
+        if administrador or editor:
+            # Inicializa los roles por defecto
+            is_admin = False
+            is_viewer = False
+            is_editor = False
+
+            # Asigna los roles según userType
+            if userType == "admin":
+                is_admin = True
+            elif userType == "visor":
+                is_viewer = True
+            elif userType == "editor":
+                is_editor = True
+            usuario.username = username
+            usuario.password_hash = generate_password_hash(password)
+            usuario.is_admin = is_admin
+            usuario.is_viewer = is_viewer
+            usuario.is_editor = is_editor
+            db.session.commit()
+            return jsonify({"Mensaje": "Usuario editado correctamente", "Usuario": usuario.username})
+        else:
+            return jsonify({"Mensaje": "No tienes permisos para editar usuarios"}), 401
+    else:
+        return jsonify({"Mensaje": "Este usuario ya estaba editado", "Usuario": usuario.username}), 401

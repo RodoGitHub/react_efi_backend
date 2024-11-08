@@ -7,6 +7,7 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean)
     is_viewer = db.Column(db.Boolean)
     is_editor = db.Column(db.Boolean)
+    activo = db.Column(db.Boolean, default=True, nullable=False)
 
 
 class Marca(db.Model):
